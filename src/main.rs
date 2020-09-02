@@ -10,9 +10,18 @@ fn main() {
 
         let mut input = String::new();
         stdin().read_line(&mut input).unwrap(); // 同理，read也可能失败的
-        let command = input.trim();
-        let mut child = Command::new(command).spawn().unwrap(); // 如果找不到binary也会失败的（一定是binary吗？有可能是脚本吗？）
 
-        child.wait().unwrap(); // 等待child process退出。有可能出错的，比如child被别人kill了
+        // 怎么处理ctrl+D呢？
+
+        let mut parts = input.trim().split_whitespace();
+        if let Some(command) = parts.next() {
+            let args = parts;
+            if let Ok(mut child) = Command::new(command).args(args).spawn() {
+                child.wait().unwrap(); // 等待child process退出。有可能出错的，比如child被别人kill了
+            } else {
+                // 如果找不到binary也会失败的（一定是binary吗？有可能是脚本吗？）
+                println!("{}: command not found", command); // 学bash
+            }
+        } // 如果是空格，那么像bash一样，再提示一次$
     }
 }
