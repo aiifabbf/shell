@@ -12,7 +12,19 @@ fn main() {
         let mut input = String::new();
         stdin().read_line(&mut input).unwrap(); // 同理，read也可能失败的
 
+        // println!("{:?}", input.bytes());
         // 怎么处理ctrl+D呢？
+        // 似乎ctrl+D是不等\n，直接把终端输入缓冲区里的东西交给应用程序
+        // <https://unix.stackexchange.com/questions/110240/why-does-ctrl-d-eof-exit-the-shell>
+        if input.is_empty() {
+            eprintln!("^D");
+            break;
+        }
+        // 测试的时候发现，没有输入任何内容的时候，按一下ctrl+D，应用程序就会马上反应没有读到任何东西，input.bytes()是空的；输入了一些内容、不按回车的时候，需要按两下ctrl+D，应用程序才会读到不带\n的内容
+        // 有人说和tty的模式有关
+        // <https://en.wikipedia.org/wiki/POSIX_terminal_interface>
+
+        // 用printf a | cargo run测试的时候发现，最后会读到空input.bytes()
 
         let mut parts = input.trim().split_whitespace();
         if let Some(command) = parts.next() {
@@ -31,7 +43,6 @@ fn main() {
                     break;
                 }
                 command => {
-                    // println!("{:?}", command.bytes());
                     if let Ok(mut child) = Command::new(command).args(args).spawn() {
                         child.wait().unwrap(); // 等待child process退出。有可能出错的，比如child被别人kill了
                     } else {
