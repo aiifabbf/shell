@@ -1,3 +1,4 @@
+use std::env;
 use std::io::stdin;
 use std::io::stdout;
 use std::io::Write; // flush()是Write trait的接口，所以必须use Write
@@ -15,12 +16,26 @@ fn main() {
 
         let mut parts = input.trim().split_whitespace();
         if let Some(command) = parts.next() {
-            let args = parts;
-            if let Ok(mut child) = Command::new(command).args(args).spawn() {
-                child.wait().unwrap(); // 等待child process退出。有可能出错的，比如child被别人kill了
-            } else {
-                // 如果找不到binary也会失败的（一定是binary吗？有可能是脚本吗？）
-                println!("{}: command not found", command); // 学bash
+            let mut args = parts;
+
+            match command {
+                "cd" => {
+                    // cd是个内建指令，所以单独拿出来实现
+                    let directory = args.next().unwrap_or("/"); // 如果cd后面没有跟路径，就默认cd到/
+                    if let Err(_) = env::set_current_dir(&directory) {
+                        eprintln!("sh: cd: {}: No such file or directory", directory);
+                        // 学bash
+                    }
+                }
+                command => {
+                    // println!("{:?}", command.bytes());
+                    if let Ok(mut child) = Command::new(command).args(args).spawn() {
+                        child.wait().unwrap(); // 等待child process退出。有可能出错的，比如child被别人kill了
+                    } else {
+                        // 如果找不到binary也会失败的（一定是binary吗？有可能是脚本吗？）
+                        println!("{}: command not found", command); // 学bash
+                    }
+                }
             }
         } // 如果是空格，那么像bash一样，再提示一次$
     }
