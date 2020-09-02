@@ -27,13 +27,16 @@ fn main() {
                         // 学bash
                     }
                 }
+                "exit" => {
+                    break;
+                }
                 command => {
                     // println!("{:?}", command.bytes());
                     if let Ok(mut child) = Command::new(command).args(args).spawn() {
                         child.wait().unwrap(); // 等待child process退出。有可能出错的，比如child被别人kill了
                     } else {
                         // 如果找不到binary也会失败的（一定是binary吗？有可能是脚本吗？）
-                        println!("{}: command not found", command); // 学bash
+                        eprintln!("{}: command not found", command); // 学bash
                     }
                 }
             }
